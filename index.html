@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Batalha Naval</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .container {
+            margin: 20px auto;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #controle {
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 5px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #resultado {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Acompanhamento de Batalha Naval</h1>
+
+        <div id="controle">
+            <h3>Posicione seus Navios</h3>
+            <label for="navio">Coordenada para o navio (Ex: A1):</label>
+            <input type="text" id="navio" placeholder="Ex: A1">
+            <button onclick="adicionarNavio()">Adicionar Navio</button>
+        </div>
+
+        <div id="acoes">
+            <h3>Movimento ou Ataque</h3>
+            <label for="acao">Escolha ação:</label>
+            <select id="acao">
+                <option value="ataque">Atacar</option>
+                <option value="movimento">Mover Navio</option>
+            </select>
+            <br>
+            <label for="coordenada">Coordenada (Ex: A1):</label>
+            <input type="text" id="coordenada" placeholder="Ex: A1">
+            <button onclick="realizarAcao()">Confirmar Ação</button>
+        </div>
+
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // Inicializa os jogadores no localStorage se ainda não existir
+        if (!localStorage.getItem('player1')) {
+            localStorage.setItem('player1', JSON.stringify({ navios: [], ataques: [] }));
+        }
+        if (!localStorage.getItem('player2')) {
+            localStorage.setItem('player2', JSON.stringify({ navios: [], ataques: [] }));
+        }
+
+        let currentPlayer = 'player1';  // Começa com o Player 1
+
+        // Função para adicionar navio
+        function adicionarNavio() {
+            const coordenada = document.getElementById('navio').value.toUpperCase();
+            const playerData = JSON.parse(localStorage.getItem(currentPlayer));
+
+            if (!playerData.navios.includes(coordenada)) {
+                playerData.navios.push(coordenada);
+                localStorage.setItem(currentPlayer, JSON.stringify(playerData));
+                document.getElementById('resultado').textContent = `Navio posicionado em ${coordenada} (Player ${currentPlayer.charAt(6)})`;
+            } else {
+                document.getElementById('resultado').textContent = `Navio já posicionado em ${coordenada}!`;
+            }
+
+            document.getElementById('navio').value = '';  // Limpa o campo
+        }
+
+        // Função para realizar o ataque ou movimento
+        function realizarAcao() {
+            const acao = document.getElementById('acao').value;
+            const coordenada = document.getElementById('coordenada').value.toUpperCase();
+            const playerData = JSON.parse(localStorage.getItem(currentPlayer));
+
+            if (acao === 'ataque') {
+                if (playerData.ataques.includes(coordenada)) {
+                    document.getElementById('resultado').textContent = `Você já atacou essa coordenada!`;
+                    return;
+                }
+
+                playerData.ataques.push(coordenada);
+
+                // Verificar se o ataque atingiu algum navio do outro jogador
+                let opponent = currentPlayer === 'player1' ? 'player2' : 'player1';
+                const opponentData = JSON.parse(localStorage.getItem(opponent));
+
+                if (opponentData.navios.includes(coordenada)) {
+                    document.getElementById('resultado').textContent = `Você acertou um navio em ${coordenada}!`;
+                    // Remover o navio atingido
+                    opponentData.navios = opponentData.navios.filter(c => c !== coordenada);
+                    localStorage.setItem(opponent, JSON.stringify(opponentData));
+                } else {
+                    document.getElementById('resultado').textContent = `Água! Nenhum navio em ${coordenada}.`;
+                }
+
+            } else if (acao === 'movimento') {
+                document.getElementById('resultado').textContent = `Navio movido para ${coordenada}. (Funcionalidade em desenvolvimento)`;
+                // A lógica de movimento pode ser implementada aqui, caso necessário.
+            }
+
+            // Salvar as alterações de volta no localStorage
+            localStorage.setItem(currentPlayer, JSON.stringify(playerData));
+            document.getElementById('coordenada').value = '';  // Limpa o campo
+        }
+
+        // Alternar entre os jogadores
+        function alternarJogador() {
+            currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+            document.getElementById('resultado').textContent = `É a vez do Player ${currentPlayer.charAt(6)}!`;
+        }
+    </script>
+
+    <div style="text-align:center; margin-top:20px;">
+        <button onclick="alternarJogador()">Trocar de Jogador</button>
+    </div>
+</body>
+</html>
